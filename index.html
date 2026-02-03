@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>For My Mini</title>
     <style>
-        body { font-family: 'Arial', sans-serif; text-align: center; background-color: #ffe6e6; overflow-x: hidden; }
+        body { font-family: 'Arial', sans-serif; text-align: center; background-color: #ffe6e6; overflow-x: hidden; position: relative; }
         #page1, #page2 { padding: 50px; }
         .hidden { display: none; }
         
@@ -13,6 +13,15 @@
         .btn { padding: 15px 30px; font-size: 20px; cursor: pointer; border: none; border-radius: 20px; margin: 10px; transition: 0.3s; }
         #yesBtn { background-color: #ff4d4d; color: white; }
         #noBtn { background-color: #888; color: white; position: absolute; }
+
+        /* Yes button animation */
+        #yesBtn { animation: none; }
+        #yesBtn:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 8px 16px rgba(255,77,77,0.25); }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+            100% { transform: scale(1); }
+        }
 
         /* Gallery */
         .gallery { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 30px; }
@@ -22,6 +31,14 @@
 
         /* Form */
         textarea { width: 80%; max-width: 400px; height: 100px; margin-top: 20px; border-radius: 10px; padding: 10px; }
+
+        /* Responsive tweaks */
+        @media (max-width: 480px) {
+            body { padding: 20px; }
+            #page1, #page2 { padding: 20px; }
+            .photo-card { width: 140px; }
+            #noBtn { top: 10px; right: 10px; }
+        }
     </style>
 </head>
 <body>
@@ -38,11 +55,11 @@
         
         <div class="gallery">
             <div class="photo-card" onclick="toggleMemory(this)">
-                <img src="your-photo1.jpg" alt="Memory 1">
+                <img src="photo1.jpg" alt="Memory 1">
                 <p class="memory-text">This was the day we first...</p>
             </div>
             <div class="photo-card" onclick="toggleMemory(this)">
-                <img src="your-photo2.jpg" alt="Memory 2">
+                <img src="photo2.jpg" alt="Memory 2">
                 <p class="memory-text">I loved how you laughed here.</p>
             </div>
         </div>
@@ -55,18 +72,50 @@
 
     <script>
         const noBtn = document.getElementById('noBtn');
+
+        // Ensure initial position so it's visible
+        function placeNoBtnInitial() {
+            // Try to place near the right of the page initially
+            noBtn.style.top = '120px';
+            noBtn.style.left = (window.innerWidth - noBtn.offsetWidth - 20) + 'px';
+        }
+        placeNoBtnInitial();
         
-        // The Floating "No" Logic
+        // The Floating "No" Logic with viewport clamping
         noBtn.addEventListener('mouseover', () => {
-            const x = Math.random() * (window.innerWidth - noBtn.offsetWidth);
-            const y = Math.random() * (window.innerHeight - noBtn.offsetHeight);
-            noBtn.style.left = `${x}px`;
-            noBtn.style.top = `${y}px`;
+            const maxX = Math.max(0, window.innerWidth - noBtn.offsetWidth);
+            const maxY = Math.max(0, window.innerHeight - noBtn.offsetHeight);
+            const margin = 8; // keep a small margin from edges
+            const x = Math.floor(Math.random() * (maxX - margin));
+            const y = Math.floor(Math.random() * (maxY - margin));
+            // clamp values
+            const clampedX = Math.min(Math.max(x, margin), maxX - margin);
+            const clampedY = Math.min(Math.max(y, margin), maxY - margin);
+            noBtn.style.left = `${clampedX}px`;
+            noBtn.style.top = `${clampedY}px`;
+        });
+
+        // Keep the button within viewport on resize
+        window.addEventListener('resize', () => {
+            const maxX = Math.max(0, window.innerWidth - noBtn.offsetWidth);
+            const maxY = Math.max(0, window.innerHeight - noBtn.offsetHeight);
+            let left = parseInt(noBtn.style.left || 0, 10);
+            let top = parseInt(noBtn.style.top || 0, 10);
+            if (isNaN(left)) left = 0;
+            if (isNaN(top)) top = 0;
+            left = Math.min(left, maxX);
+            top = Math.min(top, maxY);
+            noBtn.style.left = left + 'px';
+            noBtn.style.top = top + 'px';
         });
 
         function showMemories() {
             document.getElementById('page1').classList.add('hidden');
             document.getElementById('page2').classList.remove('hidden');
+            // small yes animation
+            const yes = document.getElementById('yesBtn');
+            yes.style.animation = 'pulse 400ms ease-in-out';
+            setTimeout(() => { yes.style.animation = 'none'; }, 420);
         }
 
         function toggleMemory(element) {
@@ -75,8 +124,8 @@
         }
 
         function sendToWhatsApp() {
-            const msg = document.getElementById('gfMessage').value;
-            const phone = "1234567890"; // REPLACE WITH YOUR PHONE NUMBER (include country code, no +)
+            const msg = document.getElementById('gfMessage').value || "Hi!";
+            const phone = "9931964809"; // REPLACED PHONE NUMBER (no +)
             window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
         }
     </script>
